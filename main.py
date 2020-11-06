@@ -1,4 +1,5 @@
 import os
+for sys import exit
 from random import choice, shuffle
 from docx import Document
 from docx.shared import Pt
@@ -12,6 +13,13 @@ import smtplib
 
 ##### ---------- Functions ---------- #####
 
+def abort():
+	"""
+		The function aborts the script.
+	"""
+	
+	exit()
+
 def user_input():
 	"""
 		The function receives and validates all the inputs that the user enters.
@@ -23,6 +31,7 @@ def user_input():
 	# Make sure that the received input is a number.
 	if not range_min.isdigit():
 		print("Next time enter a number please.")
+		abort()
 
 	# Ask for a maximum number.
 	range_max = int(input("Please enter a maximum number: "))
@@ -30,13 +39,15 @@ def user_input():
 	# Make sure that the received input is a number.
 	if not range_max.isdigit():
 		print("Next time enter a number please.")
+		abort()
 	
 	# Ask for exercises count.
 	amount = int(input("Please indicate the number of exercises you wish to generate: "))
 	
 	# Make sure that the received input is a number > 0.
 	if not amount.isdigit() or amount.isdigit() and not amount > 0:
-		print("Next time enter a number greater than zero please.")	
+		print("Next time enter a number greater than zero please.")
+		abort()
 	
 	# Ask for operations type.
 	operations = input("Please indicate what operations you would like to have in the exercises.\nm-multiplication, d-division.\nYou can specify more than one operation, for example: dm (both ':' and 'x').\nOperations: ")
@@ -45,6 +56,7 @@ def user_input():
 	for chr in operations:	
 		if chr not in operations_dict:
 			print("The operation: " + chr + " is not available.\nPlease read again the instructions.")
+			abort()
 	
 	# Ask for the document name.
 	file_name = input("worksheet name: ")
@@ -59,8 +71,32 @@ def user_input():
 	if os.path.exist(file_path):
 		os.remove(file_path)
 	
+	# Ask for the desired output: p for print or m for mail.
+	action = input("Please indicate in what form you want to get the file.\nEnter 'p' for direct print or 'm' to get the file in mail.")
+	
+	# Make sure an available action received.
+	if not 'p' in action and not 'm' in action:
+		print("You must enter either 'p' or 'm' to indicate if you want the file to be sent to the printer or to your mail address.")
+		abort()
+	
+	# If the user wants the file to be sent by mail, ask him for his mail address.
+	if 'm' in action:
+		
+		# Get the mail address of the user.
+		mail_address = input("Please enter your mail address: ")
+		
+		# Make a minimal check that a valid mail address was entered.
+		if not '@' in mail_address:
+			print("A mail address must have '@' in it.")
+			abort()
+	
+	# If not set mail address to None.
+	else:
+	
+		mail_address = None
+	
 	# Return all the inputs.
-	return range_min, range_max, amount, operations, file_name, file_path
+	return range_min, range_max, amount, operations, file_name, file_path, action, mail_address
 
 def generate_riddles(amount, operation, range_min, range_max):
 	"""
@@ -140,7 +176,7 @@ def send_mail(mail_address, file_name, file_path):
 # ----- inputs -----
 
 # Get all the necessary inputs from the user.
-# range_min, range_max, amount, operations, file_name, file_path = user_input()
+# range_min, range_max, amount, operations, file_name, file_path, action, mail_address = user_input()
 
 range_min = 2
 range_max = 12
@@ -149,6 +185,7 @@ operations = 'md'
 file_name = 'ws1'
 file_path = os.path.join("Exercises", file_name + '.docx')
 if os.path.exists(file_path): os.remove(file_path)
+action='p'
 
 # Will contain all the exercises.
 riddles = []
@@ -199,8 +236,14 @@ document.add_paragraph(riddles_formatted, style='Normal')
 # Save the document.
 document.save(file_path)
 
-# Send the document to mail.
-send_mail("maor29468@gmail.com", file_name, file_path)
+# If the user want the document by mail send it to his mail address.
+if 'm' in action:
 
-# Print the word document.
-#os.startfile(os.path.join("Exercises", file_name + '.docx'), "print")
+	# Send the document to mail.
+	send_mail(mail_address, file_name, file_path)
+
+# If the user want the document to be printed, send it to the printer.
+if 'p' in action:
+
+	# Print the word document.
+	os.startfile(os.path.join("Exercises", file_name + '.docx'), "print")
