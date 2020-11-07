@@ -20,6 +20,7 @@ from kivy.uix.checkbox import CheckBox
 from kivy.core.window import Window
 from kivy.properties import NumericProperty
 from kivy.properties import ListProperty
+from kivy.uix.button import Button
 
 
 class Tool():
@@ -229,9 +230,6 @@ class LUI():
 		# Get all the necessary inputs from the user and initialize the tool.
 		self.tool = Tool(self.user_input())
 		
-		# Start the tool.
-		self.start_tool()
-		
 	def start_tool(self):
 		"""
 			The function starts the tool with the user configurations.
@@ -387,10 +385,9 @@ class GUI(App):
 			
 		# Set the GUI to full-screen.
 		#Window.fullscreen = True
-		Window.size = (1080, 1920)
 
 		return self.main_layout
-		
+
 	class MainLayout(BoxLayout):
 		"""
 			The class represents the main layout of the GUI.
@@ -413,21 +410,46 @@ class GUI(App):
 			# Ask for the desired name of the document.
 			self.document_name = GUI.Abstracts.Input(title="Please enter desired document name", orientation="vertical", default_text="Document name here")
 			
-			# Arrange the mail address and the document name layout.
-			self.document_mail_layout = BoxLayout(orientation="vertical")
-			self.document_mail_layout.add_widget(self.exercises_properties_panel)
-			self.document_mail_layout.add_widget(self.mail_address)
-			self.document_mail_layout.add_widget(self.document_name)
+			# The launch button.
+			self.launch_button = Button(text="LAUNCH")
+			self.launch_button.bind(on_press=self.on_launch)
+			
+			# ----- Layouts arrangement ----- #
+			
+			# Arrange the bottom layout.
+			self.input_bottom_layout = BoxLayout(orientation="vertical")
+			self.input_bottom_layout.add_widget(self.mail_address)
+			self.input_bottom_layout.add_widget(self.document_name)
+			self.input_bottom_layout.add_widget(self.launch_button)
+			
+			# Shrink the bottom layout by 3 and center it.
 			self.bottom_layout = BoxLayout(orientation="horizontal")
 			self.bottom_layout.add_widget(BoxLayout())
-			self.bottom_layout.add_widget(self.document_mail_layout)
+			self.bottom_layout.add_widget(self.input_bottom_layout)
 			self.bottom_layout.add_widget(BoxLayout())
 			
 			# Add all the layouts to the main layout.
-			#self.add_widget(self.exercises_properties_panel)
+			self.add_widget(self.exercises_properties_panel)
 			self.add_widget(self.bottom_layout)
+	
+		def on_launch(self, instance):
+			"""
+				The function extracts all the user input from the GUI and sends it to the tool.
+			"""
 			
-			self.mail_address.update_padding()
+			# ----- Extract the user inputs from the GUI -----#
+			
+			# Get all the exercises properties.
+			min_number, max_number, operations, amount = self.exercises_properties_panel.get_values()
+			
+			# Get the mail address.
+			mail_address = self.mail_address.text_input.text
+			
+			# Get the document name.
+			document_name = self.document_name.text_input.text
+			
+			print(min_number, max_number, operations, amount, mail_address, document_name)
+			
 	
 		class ExercisesPropertiesPanel(BoxLayout):
 			"""
@@ -438,7 +460,7 @@ class GUI(App):
 				"""
 					Initializes the exercises properties panel layout.
 				"""
-				
+
 				# Initialize the box layout.
 				super(GUI.MainLayout.ExercisesPropertiesPanel, self).__init__(orientation='vertical', size_hint=(1, 3))
 				
@@ -467,13 +489,13 @@ class GUI(App):
 				self.add_widget(self.range_layout)
 				self.add_widget(self.operations_layout)
 				self.add_widget(self.exercises_amount)
-				
-			def get_current_values(self):
+
+			def get_values(self):
 				"""
 					The function returns the current values of all the exercises properties.
 				"""
 				
-				return self.min_number_input.text, self.max_number_input.text, self.operations_layout.get_checked(), self.exercises_amount.text
+				return self.min_number_input.text_input.text, self.max_number_input.text_input.text, self.operations_layout.get_checked(), self.exercises_amount.text_input.text
 
 	class Abstracts():
 		"""
@@ -564,7 +586,7 @@ class GUI(App):
 				The class represents an input of a number.
 			"""
 			
-			def __init__(self,title, min_value, max_value, orientation='vertical', default_text='0'):
+			def __init__(self, title, min_value, max_value, orientation='vertical', default_text='0'):
 				"""
 					Initialize the numeric input layout.
 				"""
@@ -631,6 +653,25 @@ class GUI(App):
 				self.add_widget(self.title)
 				self.add_widget(self.checkboxes_layout)
 				
+			def get_checked(self):
+				"""
+					The function returns a 
+				"""
+				
+				# Will contain the activated operations.
+				operations = []
+				
+				# Iterate over all the operation check-boxes.
+				for checkbox in self.checkboxes:
+					
+					# If the current check-box is active.
+					if checkbox.checkbox.active:
+						
+						# Add its name to the list of operations.
+						operations.append(checkbox.title.text)
+						
+				# Return the activated operations names.
+				return operations
 				
 			class CheckBoxTitle(BoxLayout):
 				"""
@@ -654,10 +695,13 @@ class GUI(App):
 					# The title of the check-box.
 					self.title = Label(text=title)
 					
-					
 					# Add the check-box and the title to the layout.
 					self.add_widget(self.title)
 					self.add_widget(self.checkbox)
 
-# Start the game.
+
+# Start the GUI.
 GUI().run()
+
+# Start the LUI.
+# LUI().start_tool()
